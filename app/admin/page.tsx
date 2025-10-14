@@ -29,36 +29,84 @@ interface Opportunity {
   duration: string
   numberOfVolunteers: number
   approved?: boolean
+  category?: string
+  urgency?: string
+  remote?: boolean
+  rating?: number
+  impact?: string
+  skills?: string[]
+  date?: string
 }
 
 export default function AdminPage() {
   const [schoolSubmissions, setSchoolSubmissions] = useState<SchoolMetrics[]>([])
-  const [ngoOpportunities, setNgoOpportunities] = useState<Opportunity[]>([])
+  const [ngoSubmissions, setNgoSubmissions] = useState<Opportunity[]>([])
+  const [volunteerOpportunities, setVolunteerOpportunities] = useState<Opportunity[]>([])
 
   useEffect(() => {
     const storedSubmissions = localStorage.getItem("schoolSubmissions")
     if (storedSubmissions) setSchoolSubmissions(JSON.parse(storedSubmissions))
 
+    const storedNgo = localStorage.getItem("ngoSubmissions")
+    if (storedNgo) setNgoSubmissions(JSON.parse(storedNgo))
+
     const storedOpportunities = localStorage.getItem("volunteerOpportunities")
-    if (storedOpportunities) setNgoOpportunities(JSON.parse(storedOpportunities))
+    if (storedOpportunities) setVolunteerOpportunities(JSON.parse(storedOpportunities))
   }, [])
 
+  const parseNumber = (s: string | undefined) => {
+    if (!s) return 0
+    const m = String(s).match(/(\d+(\.\d+)?)/)
+    return m ? Math.min(100, Math.round(Number(m[0]))) : 0
+  }
+
   const approveSchoolSubmission = (index: number) => {
-    const updated = schoolSubmissions.map((s, i) => i === index ? { ...s, approved: true } : s)
-    setSchoolSubmissions(updated)
-    localStorage.setItem("schoolSubmissions", JSON.stringify(updated))
+    const submission = schoolSubmissions[index]
+    const updatedPending = schoolSubmissions.filter((_, i) => i !== index)
+    setSchoolSubmissions(updatedPending)
+    localStorage.setItem("schoolSubmissions", JSON.stringify(updatedPending))
+
+    const approvedSchoolsRaw = localStorage.getItem("approvedSchools")
+    const approvedSchools = approvedSchoolsRaw ? JSON.parse(approvedSchoolsRaw) : []
+    const mapped = {
+      id: Date.now(),
+      name: `Submitted School ${Date.now()}`,
+      emissions: 0,
+      score: 0,
+      rank: approvedSchools.length + 100,
+      alerts: [],
+      certification: "none",
+      metrics: {
+        wasteManagement: parseNumber(submission.recyclingRates),
+        energyEfficiency: parseNumber(submission.renewableEnergy),
+        sustainabilityProjects: parseNumber(submission.studentInitiatives),
+        waterConservation: parseNumber(submission.usageReduction),
+      },
+      improvements: [submission.wasteReduction || "", submission.greenPrograms || ""].filter(Boolean),
+    }
+    const newApproved = [...approvedSchools, mapped]
+    localStorage.setItem("approvedSchools", JSON.stringify(newApproved))
   }
 
   const approveOpportunity = (id: number) => {
-    const updated = ngoOpportunities.map((o) => o.id === id ? { ...o, approved: true } : o)
-    setNgoOpportunities(updated)
-    localStorage.setItem("volunteerOpportunities", JSON.stringify(updated))
+    const submission = ngoSubmissions.find((o) => o.id === id)
+    if (!submission) return
+    const updatedPending = ngoSubmissions.filter((o) => o.id !== id)
+    setNgoSubmissions(updatedPending)
+    localStorage.setItem("ngoSubmissions", JSON.stringify(updatedPending))
+
+    const stored = localStorage.getItem("volunteerOpportunities")
+    const approved = stored ? JSON.parse(stored) : []
+    const toAdd = { ...submission, approved: true }
+    const updatedApproved = [...approved, toAdd]
+    localStorage.setItem("volunteerOpportunities", JSON.stringify(updatedApproved))
+    setVolunteerOpportunities(updatedApproved)
   }
 
   const deleteOpportunity = (id: number) => {
-    const updated = ngoOpportunities.filter((o) => o.id !== id)
-    setNgoOpportunities(updated)
-    localStorage.setItem("volunteerOpportunities", JSON.stringify(updated))
+    const updated = ngoSubmissions.filter((o) => o.id !== id)
+    setNgoSubmissions(updated)
+    localStorage.setItem("ngoSubmissions", JSON.stringify(updated))
   }
 
   return (
@@ -66,9 +114,8 @@ export default function AdminPage() {
     <Navigation />
       <h1 className="text-4xl font-bold text-center">Admin Dashboard</h1>
 
-      {/* School Submissions */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold">School Submissions</h2>
+        <h2 className="text-2xl font-semibold">School Submissions (Pending)</h2>
         {schoolSubmissions.length === 0 ? (
           <p className="text-muted-foreground">No school submissions yet.</p>
         ) : (
@@ -88,12 +135,7 @@ export default function AdminPage() {
                   <p><strong>Usage Reduction:</strong> {s.usageReduction}</p>
                   <p><strong>Harvesting Systems:</strong> {s.harvestingSystems}</p>
                   <div className="mt-2 flex gap-2 items-center">
-                    {!s.approved && (
-                      <Button onClick={() => approveSchoolSubmission(idx)} className="bg-primary hover:bg-primary/90 rounded-xl px-4 py-2">
-                        Approve
-                      </Button>
-                    )}
-                    {s.approved && <Badge className="bg-green-500 text-white">Approved</Badge>}
+                    <Button onClick={() => approveSchoolSubmission(idx)} className="bg-primary hover:bg-primary/90 rounded-xl px-4 py-2">Approve</Button>
                   </div>
                 </CardContent>
               </Card>
@@ -102,14 +144,13 @@ export default function AdminPage() {
         )}
       </section>
 
-      {/* NGO Volunteer Opportunities */}
       <section className="space-y-6">
-        <h2 className="text-2xl font-semibold">NGO Volunteer Opportunities</h2>
-        {ngoOpportunities.length === 0 ? (
-          <p className="text-muted-foreground">No NGO opportunities submitted yet.</p>
+        <h2 className="text-2xl font-semibold">NGO Submissions (Pending)</h2>
+        {ngoSubmissions.length === 0 ? (
+          <p className="text-muted-foreground">No NGO submissions yet.</p>
         ) : (
           <div className="space-y-4">
-            {ngoOpportunities.map((opp) => (
+            {ngoSubmissions.map((opp) => (
               <Card key={opp.id} className="p-4">
                 <CardHeader>
                   <CardTitle>{opp.title}</CardTitle>
@@ -123,15 +164,8 @@ export default function AdminPage() {
                   <p><strong>Duration:</strong> {opp.duration}</p>
                   <p><strong>Volunteers Needed:</strong> {opp.numberOfVolunteers}</p>
                   <div className="mt-2 flex gap-2 items-center">
-                    {!opp.approved && (
-                      <Button onClick={() => approveOpportunity(opp.id)} className="bg-primary hover:bg-primary/90 rounded-xl px-4 py-2">
-                        Approve
-                      </Button>
-                    )}
-                    <Button onClick={() => deleteOpportunity(opp.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl px-4 py-2">
-                      Delete
-                    </Button>
-                    {opp.approved && <Badge className="bg-green-500 text-white">Approved</Badge>}
+                    <Button onClick={() => approveOpportunity(opp.id)} className="bg-primary hover:bg-primary/90 rounded-xl px-4 py-2">Approve</Button>
+                    <Button onClick={() => deleteOpportunity(opp.id)} className="bg-destructive hover:bg-destructive/90 rounded-xl px-4 py-2">Delete</Button>
                   </div>
                 </CardContent>
               </Card>

@@ -1,11 +1,11 @@
 "use client"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Search, MapPin, Clock, Users, Heart, Calendar, Star, GraduationCap, Stethoscope, Briefcase, Hammer, Leaf } from "lucide-react"
-import { volunteerOpportunities, Opportunity } from "@/data/volunteer-opportunities"
+import { volunteerOpportunities as staticOpportunities, Opportunity } from "@/data/volunteer-opportunities"
 
 const categoryIcons: Record<string, any> = {
   "Humanitarian Aid": Heart,
@@ -31,8 +31,15 @@ export function VolunteerOpportunities() {
   const [filterUrgency, setFilterUrgency] = useState("all")
   const [filterRemote, setFilterRemote] = useState("all")
   const [sortBy, setSortBy] = useState("date")
+  const [opportunities, setOpportunities] = useState<Opportunity[]>([])
 
-  const filteredOpportunities = volunteerOpportunities
+  useEffect(() => {
+    const stored = localStorage.getItem("volunteerOpportunities")
+    if (stored) setOpportunities(JSON.parse(stored))
+    else setOpportunities(staticOpportunities)
+  }, [])
+
+  const filteredOpportunities = opportunities
     .filter((opp) => {
       const matchSearch =
         opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -57,7 +64,7 @@ export function VolunteerOpportunities() {
       }
     })
 
-  const categories = Array.from(new Set(volunteerOpportunities.map((o) => o.category)))
+  const categories = Array.from(new Set((staticOpportunities || []).map((o) => o.category).filter(Boolean)))
 
   return (
     <section className="relative py-24 overflow-hidden">

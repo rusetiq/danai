@@ -1,9 +1,8 @@
 "use client"
 import { Navigation } from "@/components/navigation"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { volunteerOpportunities } from "@/data/volunteer-opportunities"
 
 interface Opportunity {
   id: number
@@ -43,8 +42,11 @@ export default function NGODashboard() {
   }
 
   const handleSubmit = () => {
-    volunteerOpportunities.push({ ...opp, category: "Environment", urgency: "medium", remote: false, rating: 0, impact: "", skills: [], date: new Date().toISOString() })
-    localStorage.setItem("volunteerOpportunities", JSON.stringify(volunteerOpportunities))
+    const stored = localStorage.getItem("ngoSubmissions")
+    const pending = stored ? JSON.parse(stored) : []
+    const toAdd = { ...opp, id: Date.now(), category: "Environment", urgency: "medium", remote: false, rating: 0, impact: "", skills: [], date: new Date().toISOString(), approved: false }
+    const updated = [...pending, toAdd]
+    localStorage.setItem("ngoSubmissions", JSON.stringify(updated))
     setSubmitted(true)
     setOpp({
       id: Date.now(),
@@ -89,7 +91,7 @@ export default function NGODashboard() {
         <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90 rounded-xl px-6 py-2">
           Submit Opportunity
         </Button>
-        {submitted && <p className="mt-4 text-green-500">Opportunity submitted successfully!</p>}
+        {submitted && <p className="mt-4 text-green-500">Opportunity submitted for admin approval.</p>}
       </div>
     </div>
   )
