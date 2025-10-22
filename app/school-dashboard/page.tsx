@@ -1,21 +1,25 @@
 "use client"
 import { Navigation } from "@/components/navigation"
 import { useState, useEffect } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { mockSchools } from "@/components/location-service"
 
 interface SchoolMetrics {
-  recyclingRates: string
-  wasteReduction: string
-  renewableEnergy: string
-  conservationEfforts: string
-  studentInitiatives: string
-  greenPrograms: string
-  usageReduction: string
-  harvestingSystems: string
-  approved?: boolean
+  id?: number;
+  schoolName?: string;
+  recyclingRates: string;
+  wasteReduction: string;
+  renewableEnergy: string;
+  conservationEfforts: string;
+  studentInitiatives: string;
+  greenPrograms: string;
+  usageReduction: string;
+  harvestingSystems: string;
+  approved?: boolean;
+  submittedAt?: string;
 }
 
 export default function SchoolDashboard() {
@@ -32,6 +36,7 @@ export default function SchoolDashboard() {
   }
 
   const [metrics, setMetrics] = useState<SchoolMetrics>({
+    schoolName: "",
     recyclingRates: "",
     wasteReduction: "",
     renewableEnergy: "",
@@ -44,6 +49,7 @@ export default function SchoolDashboard() {
 
   const [submissions, setSubmissions] = useState<SchoolMetrics[]>([])
   const [showSubmissionPreview, setShowSubmissionPreview] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem("schoolSubmissions")
@@ -55,12 +61,19 @@ export default function SchoolDashboard() {
   }
 
   const handleSubmit = () => {
-    const newSubmission = { ...metrics, approved: false }
-    const updated = [...submissions, newSubmission]
-    setSubmissions(updated)
-    localStorage.setItem("schoolSubmissions", JSON.stringify(updated))
-    alert("Submitted for admin approval!")
+    const stored = localStorage.getItem("schoolSubmissions")
+    const pending = stored ? JSON.parse(stored) : []
+    const submission: SchoolMetrics = {
+      ...metrics,
+      id: Date.now(),
+      approved: false,
+      submittedAt: new Date().toISOString()
+    }
+    localStorage.setItem("schoolSubmissions", JSON.stringify([...pending, submission]))
+    setSubmissions([...pending, submission]) // Add this line
+    setSubmitted(true)
     setMetrics({
+      schoolName: "",
       recyclingRates: "",
       wasteReduction: "",
       renewableEnergy: "",
@@ -113,6 +126,12 @@ export default function SchoolDashboard() {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Input 
+          placeholder="School Name" 
+          value={metrics.schoolName} 
+          onChange={e => handleChange("schoolName", e.target.value)} 
+          className="col-span-2"
+        />
         <Input placeholder="Recycling Rates (%)" value={metrics.recyclingRates} onChange={e => handleChange("recyclingRates", e.target.value)} />
         <Input placeholder="Waste Reduction Initiatives" value={metrics.wasteReduction} onChange={e => handleChange("wasteReduction", e.target.value)} />
         <Input placeholder="Renewable Energy Usage" value={metrics.renewableEnergy} onChange={e => handleChange("renewableEnergy", e.target.value)} />
@@ -129,6 +148,13 @@ export default function SchoolDashboard() {
           {showSubmissionPreview ? "Show Preexisting Data" : "Preview My Submission"}
         </Button>
       </div>
+
+      {submitted && (
+        <div className="mt-3 text-sm flex items-center gap-2">
+          <span className="text-green-500">Submission sent for admin approval.</span>
+          <Link href="/location" className="underline text-primary">View Leaderboard</Link>
+        </div>
+      )}
 
       <div className="mt-8">
         <h2 className="text-2xl font-semibold mb-4">Visualized Metrics</h2>

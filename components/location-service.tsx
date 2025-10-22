@@ -72,7 +72,8 @@ export function LocationService() {
     if (stored) {
       try {
         const approved = JSON.parse(stored)
-        setSchools([...mockSchools, ...approved])
+        // Only show approved schools
+        setSchools([...mockSchools, ...approved.filter((s: any) => s.approved)])
       } catch {
         setSchools(mockSchools)
       }
@@ -161,49 +162,49 @@ export function LocationService() {
       </Card>
 
       <Card className="glass border-border/50">
-  <CardHeader>
-    <CardTitle className="flex items-center space-x-2">
-      <Activity className="w-5 h-5 text-primary" />
-      <span>Green Certification Criteria</span>
-    </CardTitle>
-  </CardHeader>
-  <CardContent className="space-y-4">
-    <p className="text-sm mb-4 text-slate-300 text-slate-300">Schools are evaluated across four key sustainability metrics and awarded certification based on their overall performance:</p>
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <div className="glass rounded-lg p-3">
-        <div className="flex items-center space-x-2 mb-1">
-          <Recycle className="w-4 h-4 text-green-400" />
-          <span className="text-sm font-semibold">Waste Management</span>
-        </div>
-        <p className="text-xs text-slate-300">Recycling rates, waste reduction initiatives</p>
-      </div>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Activity className="w-5 h-5 text-primary" />
+            <span>Green Certification Criteria</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm mb-4 text-slate-300">Schools are evaluated across four key sustainability metrics and awarded certification based on their overall performance:</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="glass rounded-lg p-3">
+              <div className="flex items-center space-x-2 mb-1">
+                <Recycle className="w-4 h-4 text-green-400" />
+                <span className="text-sm font-semibold">Waste Management</span>
+              </div>
+              <p className="text-xs text-slate-300">Recycling rates, waste reduction initiatives</p>
+            </div>
 
-      <div className="glass rounded-lg p-3">
-        <div className="flex items-center space-x-2 mb-1">
-          <Zap className="w-4 h-4 text-yellow-400" />
-          <span className="text-sm font-semibold">Energy Efficiency</span>
-        </div>
-        <p className="text-xs text-slate-300">Renewable energy use, conservation efforts</p>
-      </div>
+            <div className="glass rounded-lg p-3">
+              <div className="flex items-center space-x-2 mb-1">
+                <Zap className="w-4 h-4 text-yellow-400" />
+                <span className="text-sm font-semibold">Energy Efficiency</span>
+              </div>
+              <p className="text-xs text-slate-300">Renewable energy use, conservation efforts</p>
+            </div>
 
-      <div className="glass rounded-lg p-3">
-        <div className="flex items-center space-x-2 mb-1">
-          <TrendingUp className="w-4 h-4 text-blue-400" />
-          <span className="text-sm font-semibold">Sustainability Projects</span>
-        </div>
-        <p className="text-xs text-slate-300">Student initiatives, green programs</p>
-      </div>
+            <div className="glass rounded-lg p-3">
+              <div className="flex items-center space-x-2 mb-1">
+                <TrendingUp className="w-4 h-4 text-blue-400" />
+                <span className="text-sm font-semibold">Sustainability Projects</span>
+              </div>
+              <p className="text-xs text-slate-300">Student initiatives, green programs</p>
+            </div>
 
-      <div className="glass rounded-lg p-3">
-        <div className="flex items-center space-x-2 mb-1">
-          <Droplets className="w-4 h-4 text-cyan-400" />
-          <span className="text-sm font-semibold">Water Conservation</span>
-        </div>
-        <p className="text-xs text-slate-300">Usage reduction, harvesting systems</p>
-      </div>
-    </div>
-  </CardContent>
-</Card>
+            <div className="glass rounded-lg p-3">
+              <div className="flex items-center space-x-2 mb-1">
+                <Droplets className="w-4 h-4 text-cyan-400" />
+                <span className="text-sm font-semibold">Water Conservation</span>
+              </div>
+              <p className="text-xs text-slate-300">Usage reduction, harvesting systems</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {selectedSchool && (
         <Dialog open={!!selectedSchool} onOpenChange={() => setSelectedSchool(null)}>
@@ -312,147 +313,6 @@ export function LocationService() {
                 </div>
               )}
 
-              <div className="glass rounded-lg p-4 text-center">
-                <p className="text-xs text-muted-foreground mb-1">Weekly Carbon Emissions</p>
-                <p className="text-2xl font-bold text-primary">{selectedSchool.emissions} tons CO₂</p>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-    </div>
-  )
-}
-        <Dialog open={!!selectedSchool} onOpenChange={() => setSelectedSchool(null)}>
-          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center space-x-2">
-                <School className="w-5 h-5" />
-                <span>{selectedSchool.name}</span>
-              </DialogTitle>
-            </DialogHeader>
-            
-            <div className="space-y-6 mt-4">
-              {/* Certification Badge */}
-              <div className="text-center p-6 glass rounded-lg">
-                <div className="text-6xl mb-3">{certificationConfig[selectedSchool.certification].icon}</div>
-                <Badge variant="outline" className={`${certificationConfig[selectedSchool.certification].color} text-lg px-4 py-1`}>
-                  {certificationConfig[selectedSchool.certification].label}
-                </Badge>
-                <p className="text-sm text-muted-foreground mt-2">
-                  {certificationConfig[selectedSchool.certification].description}
-                </p>
-                <div className="mt-4 text-3xl font-bold text-primary">{selectedSchool.score} Points</div>
-                <p className="text-xs text-muted-foreground">Rank #{selectedSchool.rank} of {schools.length}</p>
-              </div>
-
-              {/* Performance Metrics */}
-              <div>
-                <h3 className="text-sm font-semibold mb-3 flex items-center space-x-2">
-                  <Activity className="w-4 h-4" />
-                  <span>Performance Metrics</span>
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div className="glass rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Recycle className="w-4 h-4 text-green-400" />
-                        <span className="text-sm font-medium">Waste Management</span>
-                      </div>
-                      <span className="text-sm font-bold">{selectedSchool.metrics.wasteManagement}%</span>
-                    </div>
-                    <div className="w-full bg-muted/30 rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full transition-all duration-500" 
-                        style={{ width: `${selectedSchool.metrics.wasteManagement}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="glass rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Zap className="w-4 h-4 text-yellow-400" />
-                        <span className="text-sm font-medium">Energy Efficiency</span>
-                      </div>
-                      <span className="text-sm font-bold">{selectedSchool.metrics.energyEfficiency}%</span>
-                    </div>
-                    <div className="w-full bg-muted/30 rounded-full h-2">
-                      <div 
-                        className="bg-yellow-500 h-2 rounded-full transition-all duration-500" 
-                        style={{ width: `${selectedSchool.metrics.energyEfficiency}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="glass rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <TrendingUp className="w-4 h-4 text-blue-400" />
-                        <span className="text-sm font-medium">Sustainability Projects</span>
-                      </div>
-                      <span className="text-sm font-bold">{selectedSchool.metrics.sustainabilityProjects}%</span>
-                    </div>
-                    <div className="w-full bg-muted/30 rounded-full h-2">
-                      <div 
-                        className="bg-blue-500 h-2 rounded-full transition-all duration-500" 
-                        style={{ width: `${selectedSchool.metrics.sustainabilityProjects}%` }}
-                      />
-                    </div>
-                  </div>
-                  
-                  <div className="glass rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Droplets className="w-4 h-4 text-cyan-400" />
-                        <span className="text-sm font-medium">Water Conservation</span>
-                      </div>
-                      <span className="text-sm font-bold">{selectedSchool.metrics.waterConservation}%</span>
-                    </div>
-                    <div className="w-full bg-muted/30 rounded-full h-2">
-                      <div 
-                        className="bg-cyan-500 h-2 rounded-full transition-all duration-500" 
-                        style={{ width: `${selectedSchool.metrics.waterConservation}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Areas for Improvement */}
-              <div>
-                <h3 className="text-sm font-semibold mb-3 flex items-center space-x-2">
-                  <TrendingUp className="w-4 h-4" />
-                  <span>Recommended Improvements</span>
-                </h3>
-                <div className="space-y-2">
-                  {selectedSchool.improvements.map((improvement, i) => (
-                    <div key={i} className="glass p-3 rounded-lg text-sm flex items-start space-x-2">
-                      <span className="text-primary mt-0.5">•</span>
-                      <span className="text-muted-foreground">{improvement}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Alerts */}
-              {selectedSchool.alerts && selectedSchool.alerts.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-semibold mb-3 flex items-center space-x-2">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span>Recent Alerts</span>
-                  </h3>
-                  <div className="space-y-2">
-                    {selectedSchool.alerts.map((alert, i) => (
-                      <div key={i} className="glass p-3 rounded-lg text-sm text-muted-foreground border-l-2 border-primary">
-                        {alert}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Emissions Info */}
               <div className="glass rounded-lg p-4 text-center">
                 <p className="text-xs text-muted-foreground mb-1">Weekly Carbon Emissions</p>
                 <p className="text-2xl font-bold text-primary">{selectedSchool.emissions} tons CO₂</p>

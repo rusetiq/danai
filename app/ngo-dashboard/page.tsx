@@ -1,6 +1,7 @@
 "use client"
 import { Navigation } from "@/components/navigation"
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -42,23 +43,45 @@ export default function NGODashboard() {
   }
 
   const handleSubmit = () => {
+    // Validate required fields
+    if (!opp.title || !opp.organization || !opp.emirate || !opp.description || !opp.location) {
+      alert("Please fill in all required fields")
+      return
+    }
+
     const stored = localStorage.getItem("ngoSubmissions")
     const pending = stored ? JSON.parse(stored) : []
-    const toAdd = { ...opp, id: Date.now(), category: "Environment", urgency: "medium", remote: false, rating: 0, impact: "", skills: [], date: new Date().toISOString(), approved: false }
-    const updated = [...pending, toAdd]
-    localStorage.setItem("ngoSubmissions", JSON.stringify(updated))
+    const toAdd = { 
+      ...opp, 
+      id: Date.now(), 
+      category: "Environment", 
+      urgency: "medium" as const, // Fix urgency type
+      remote: false, 
+      rating: 4.5, 
+      impact: "Community Impact", 
+      skills: ["Environmental Awareness"], 
+      date: new Date().toISOString(), 
+      approved: false 
+    }
+    
+    localStorage.setItem("ngoSubmissions", JSON.stringify([...pending, toAdd]))
     setSubmitted(true)
-    setOpp({
-      id: Date.now(),
-      title: "",
-      organization: "",
-      emirate: "",
-      description: "",
-      location: "",
-      time: "",
-      duration: "",
-      numberOfVolunteers: 0,
-    })
+    
+    // Reset form after 3 seconds
+    setTimeout(() => {
+      setSubmitted(false)
+      setOpp({
+        id: Date.now(),
+        title: "",
+        organization: "",
+        emirate: "",
+        description: "",
+        location: "",
+        time: "",
+        duration: "",
+        numberOfVolunteers: 0,
+      })
+    }, 3000)
   }
 
   return (
@@ -91,7 +114,14 @@ export default function NGODashboard() {
         <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90 rounded-xl px-6 py-2">
           Submit Opportunity
         </Button>
-        {submitted && <p className="mt-4 text-green-500">Opportunity submitted for admin approval.</p>}
+        {submitted && (
+          <div className="mt-4 space-y-2">
+            <p className="text-green-500">Opportunity submitted for admin approval.</p>
+            <div className="flex items-center justify-center gap-2">
+              <Link href="/opportunities" className="text-sm underline text-primary">View Opportunities</Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

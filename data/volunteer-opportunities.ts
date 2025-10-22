@@ -1,23 +1,25 @@
 export interface Opportunity {
-  id: number
-  title: string
-  organization: string
-  emirate: string
-  description: string
-  location: string
-  commitment?: string
-  duration?: string
-  volunteers?: number
-  urgency?: "low" | "medium" | "high"
-  remote?: boolean
-  rating?: number
-  impact?: string
-  skills?: string[]
-  category?: string
-  date?: string
+  id: number;
+  title: string;
+  organization: string;
+  category: string;
+  description: string;
+  emirate: string;
+  location: string;
+  time?: string;
+  duration: string;
+  numberOfVolunteers?: number;
+  volunteers?: number;
+  commitment?: string;
+  urgency: "low" | "medium" | "high";
+  remote: boolean;
+  rating: number;
+  impact: string;
+  skills: string[];
+  date: string;
 }
 
-export const volunteerOpportunities = [
+export const volunteerOpportunities: Opportunity[] = [
   {
     id: 1,
     title: "Beach Cleanup Drive",
@@ -72,5 +74,8 @@ export const volunteerOpportunities = [
     impact: "Waste Reduction",
     skills: ["Public Speaking", "Teamwork", "Environmental Advocacy"],
     date: "2025-10-20",
-  }
-]
+  },
+].map((opp) => ({
+  ...opp,
+  urgency: (opp.urgency?.toLowerCase() || "medium") as "low" | "medium" | "high",
+}));

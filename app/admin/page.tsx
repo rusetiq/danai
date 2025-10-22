@@ -1,5 +1,7 @@
 "use client"
 import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useAdminStats } from "@/data/admin-stats"
 import { Navigation } from "@/components/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -7,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 
 interface SchoolMetrics {
+  id?: number;
+  schoolName?: string;
   recyclingRates: string
   wasteReduction: string
   renewableEnergy: string
@@ -16,6 +20,7 @@ interface SchoolMetrics {
   usageReduction: string
   harvestingSystems: string
   approved?: boolean
+  submittedAt?: string
 }
 
 interface Opportunity {
@@ -39,19 +44,43 @@ interface Opportunity {
 }
 
 export default function AdminPage() {
+  const stats = useAdminStats(4000)
   const [schoolSubmissions, setSchoolSubmissions] = useState<SchoolMetrics[]>([])
   const [ngoSubmissions, setNgoSubmissions] = useState<Opportunity[]>([])
   const [volunteerOpportunities, setVolunteerOpportunities] = useState<Opportunity[]>([])
+  const [approvedCounts, setApprovedCounts] = useState({ schools: 0, opportunities: 0 })
 
-  useEffect(() => {
+  const refreshData = () => {
     const storedSubmissions = localStorage.getItem("schoolSubmissions")
-    if (storedSubmissions) setSchoolSubmissions(JSON.parse(storedSubmissions))
+    if (storedSubmissions) {
+      const parsed = JSON.parse(storedSubmissions)
+      console.log("School submissions:", parsed) // Debug line
+      setSchoolSubmissions(parsed)
+    }
 
     const storedNgo = localStorage.getItem("ngoSubmissions")
-    if (storedNgo) setNgoSubmissions(JSON.parse(storedNgo))
+    if (storedNgo) {
+      const parsed = JSON.parse(storedNgo)
+      console.log("NGO submissions:", parsed) // Debug line
+      setNgoSubmissions(parsed)
+    }
 
-    const storedOpportunities = localStorage.getItem("volunteerOpportunities")
-    if (storedOpportunities) setVolunteerOpportunities(JSON.parse(storedOpportunities))
+    const approvedSchoolsRaw = localStorage.getItem("approvedSchools")
+    const approvedSchools = approvedSchoolsRaw ? JSON.parse(approvedSchoolsRaw) : []
+    const approvedOppsRaw = localStorage.getItem("volunteerOpportunities")
+    const approvedOpps = approvedOppsRaw ? JSON.parse(approvedOppsRaw) : []
+    setApprovedCounts({
+      schools: approvedSchools.filter((s: any) => s.approved).length,
+      opportunities: approvedOpps.filter((o: any) => o.approved).length,
+    })
+    setVolunteerOpportunities(approvedOpps)
+  }
+
+  useEffect(() => {
+    refreshData()
+    // Check for new submissions every 5 seconds
+    const interval = setInterval(refreshData, 5000)
+    return () => clearInterval(interval)
   }, [])
 
   const parseNumber = (s: string | undefined) => {
@@ -62,45 +91,51 @@ export default function AdminPage() {
 
   const approveSchoolSubmission = (index: number) => {
     const submission = schoolSubmissions[index]
+    if (!submission) return
+
+    // Remove from pending submissions
     const updatedPending = schoolSubmissions.filter((_, i) => i !== index)
     setSchoolSubmissions(updatedPending)
     localStorage.setItem("schoolSubmissions", JSON.stringify(updatedPending))
 
+    // Add to approved schools
     const approvedSchoolsRaw = localStorage.getItem("approvedSchools")
     const approvedSchools = approvedSchoolsRaw ? JSON.parse(approvedSchoolsRaw) : []
     const mapped = {
-      id: Date.now(),
-      name: `Submitted School ${Date.now()}`,
+      id: submission.id || Date.now(),
+      name: submission.schoolName || `School ${Date.now()}`,
       emissions: 0,
-      score: 0,
-      rank: approvedSchools.length + 100,
+      score: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
+      rank: approvedSchools.length + 1,
       alerts: [],
-      certification: "none",
+      certification: "bronze" as const,
+      approved: true,
       metrics: {
         wasteManagement: parseNumber(submission.recyclingRates),
         energyEfficiency: parseNumber(submission.renewableEnergy),
         sustainabilityProjects: parseNumber(submission.studentInitiatives),
         waterConservation: parseNumber(submission.usageReduction),
       },
-      improvements: [submission.wasteReduction || "", submission.greenPrograms || ""].filter(Boolean),
+      improvements: [submission.wasteReduction, submission.greenPrograms].filter(Boolean),
     }
-    const newApproved = [...approvedSchools, mapped]
-    localStorage.setItem("approvedSchools", JSON.stringify(newApproved))
+    localStorage.setItem("approvedSchools", JSON.stringify([...approvedSchools, mapped]))
+    refreshData()
   }
 
   const approveOpportunity = (id: number) => {
     const submission = ngoSubmissions.find((o) => o.id === id)
     if (!submission) return
+    
     const updatedPending = ngoSubmissions.filter((o) => o.id !== id)
     setNgoSubmissions(updatedPending)
     localStorage.setItem("ngoSubmissions", JSON.stringify(updatedPending))
 
     const stored = localStorage.getItem("volunteerOpportunities")
     const approved = stored ? JSON.parse(stored) : []
-    const toAdd = { ...submission, approved: true }
-    const updatedApproved = [...approved, toAdd]
+    const updatedApproved = [...approved, { ...submission, approved: true }]
     localStorage.setItem("volunteerOpportunities", JSON.stringify(updatedApproved))
     setVolunteerOpportunities(updatedApproved)
+    refreshData()
   }
 
   const deleteOpportunity = (id: number) => {
@@ -113,6 +148,12 @@ export default function AdminPage() {
     <div className="max-w-5xl mx-auto py-24 space-y-12">
     <Navigation />
       <h1 className="text-4xl font-bold text-center">Admin Dashboard</h1>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card className="glass border-border/50"><CardContent className="p-4"><div className="text-xs text-muted-foreground">Approved Schools</div><div className="text-2xl font-bold text-primary">{stats.approvedSchools}</div></CardContent></Card>
+        <Card className="glass border-border/50"><CardContent className="p-4"><div className="text-xs text-muted-foreground">Approved Opportunities</div><div className="text-2xl font-bold text-primary">{stats.approvedOpportunities}</div></CardContent></Card>
+        <Card className="glass border-border/50"><CardContent className="p-4"><div className="text-xs text-muted-foreground">Pending Schools</div><div className="text-2xl font-bold">{stats.pendingSchools}</div></CardContent></Card>
+        <Card className="glass border-border/50"><CardContent className="p-4"><div className="text-xs text-muted-foreground">Pending Opportunities</div><div className="text-2xl font-bold">{stats.pendingOpportunities}</div></CardContent></Card>
+      </div>
 
       <section className="space-y-6">
         <h2 className="text-2xl font-semibold">School Submissions (Pending)</h2>

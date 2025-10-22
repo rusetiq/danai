@@ -35,8 +35,13 @@ export function VolunteerOpportunities() {
 
   useEffect(() => {
     const stored = localStorage.getItem("volunteerOpportunities")
-    if (stored) setOpportunities(JSON.parse(stored))
-    else setOpportunities(staticOpportunities)
+    if (stored) {
+      const parsed = JSON.parse(stored) as any[]
+      // Only show approved opportunities (if the flag exists); default to true
+      setOpportunities(parsed.filter((opp) => (opp as any).approved ?? true))
+    } else {
+      setOpportunities(staticOpportunities)
+    }
   }, [])
 
   const filteredOpportunities = opportunities
@@ -121,7 +126,10 @@ export function VolunteerOpportunities() {
                     <div className="flex items-center gap-2"><MapPin className="w-4 h-4 text-muted-foreground" /> {opp.location}</div>
                     <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-muted-foreground" /> {opp.time}</div>
                     <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-muted-foreground" /> {opp.duration}</div>
-                    <div className="flex items-center gap-2"><Users className="w-4 h-4 text-muted-foreground" /> {opp.numberOfVolunteers} volunteers</div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-4 h-4 text-muted-foreground" /> 
+                      {(opp.numberOfVolunteers || opp.volunteers || 0)} volunteers
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1"><Star className="w-4 h-4 text-yellow-400 fill-current" /> <span className="text-sm font-medium">{opp.rating}</span></div>
