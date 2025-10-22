@@ -1,30 +1,23 @@
-# Charity app with map
+# Danai
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+**Danai** is a pioneering platform dedicated to promoting sustainability and community involvement. Through gamified school challenges, it encourages students and institutions to take eco-friendly actions, reduce carbon emissions, and earn recognition for their impact.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/aarushs-projects-877ad2c8/v0-charity-app-with-map)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/projects/VzBfiHSw8CL)
+---
 
-## Overview
+## Features
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+- **School Challenge System:** Engage students in sustainability initiatives through structured challenges.  
+- **Incentivized Actions:** Earn points for eco-friendly activities and reduce your carbon footprint.  
+- **Leaderboards:** Track top-performing students, schools, and institutions.  
+- **Recognition:** Highlight impactful contributions to sustainability.  
+- **Dashboards:** Admin, NGO, and school dashboards to monitor progress and participation. *(Placeholder data in alpha version)*  
+- **Enhanced UI:** Stylish homepage, gradients, and card designs for a polished user experience.  
 
-## Deployment
+---
 
-Your project is live at:
+## Usage
 
-**[https://vercel.com/aarushs-projects-877ad2c8/v0-charity-app-with-map](https://vercel.com/aarushs-projects-877ad2c8/v0-charity-app-with-map)**
-
-## Build your app
-
-Continue building your app on:
-
-**[https://v0.app/chat/projects/VzBfiHSw8CL](https://v0.app/chat/projects/VzBfiHSw8CL)**
-
-## How It Works
-
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+- Explore the homepage and dashboards.  
+- View placeholder testimonials and UI elements.  
+- Track leaderboard scores and eco-friendly actions.  
+- Note: Some features are still using placeholder data in this alpha version.
