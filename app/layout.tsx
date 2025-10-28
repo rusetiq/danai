@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "danai - Unite for Good",
   description:
     "Connect with local charity communities, discover volunteer opportunities, and make a difference in your community.",
+    generator: 'v0.app'
 }
 
 export default function RootLayout({

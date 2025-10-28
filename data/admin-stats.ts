@@ -1,3 +1,7 @@
+"use client"
+
+import { useState, useEffect } from "react"
+
 export type AdminStats = {
   approvedSchools: number
   approvedOpportunities: number
@@ -23,37 +27,34 @@ export function getAdminStats(): AdminStats {
   try {
     const a = approvedSchoolsRaw ? JSON.parse(approvedSchoolsRaw) : []
     approvedSchools = a.filter((s: any) => s && s.approved).length
-  } catch { /* noop */ }
+  } catch {}
 
   try {
     const a = approvedOppsRaw ? JSON.parse(approvedOppsRaw) : []
     approvedOpportunities = a.filter((o: any) => o && o.approved).length
-  } catch { /* noop */ }
+  } catch {}
 
   try {
     const p = schoolSubmissionsRaw ? JSON.parse(schoolSubmissionsRaw) : []
     pendingSchools = Array.isArray(p) ? p.length : 0
-  } catch { /* noop */ }
+  } catch {}
 
   try {
     const p = ngoSubmissionsRaw ? JSON.parse(ngoSubmissionsRaw) : []
     pendingOpportunities = Array.isArray(p) ? p.length : 0
-  } catch { /* noop */ }
+  } catch {}
 
   return { approvedSchools, approvedOpportunities, pendingSchools, pendingOpportunities }
 }
 
-export function useAdminStats(pollMs: number = 5000): AdminStats {
-  // Client-only hook; import in client components
-  // Dynamic import or usage inside "use client" files only
-  const { useEffect, useState } = require("react") as typeof import("react")
+export function useAdminStats(pollMs = 5000): AdminStats {
   const [stats, setStats] = useState<AdminStats>(getAdminStats())
+
   useEffect(() => {
     setStats(getAdminStats())
     const id = setInterval(() => setStats(getAdminStats()), pollMs)
     return () => clearInterval(id)
   }, [pollMs])
+
   return stats
 }
-
-

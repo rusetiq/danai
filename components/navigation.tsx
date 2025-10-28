@@ -1,11 +1,11 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
-import { FlowerIcon, Users, Calendar, School2, Menu, X, UserCircle, LogOut } from "lucide-react"
+import { FlowerIcon, Users, Calendar, School2, Menu, X, UserCircle, LogOut, User, Gift } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
-interface User {
+interface CharityUser {
   id: number
   name: string
   email: string
@@ -16,7 +16,7 @@ interface User {
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false)
   const [isAuth, setIsAuth] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<CharityUser | null>(null)
   const router = useRouter()
   const dropdownRef = useRef<HTMLDivElement>(null)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
@@ -32,11 +32,11 @@ export function Navigation() {
   useEffect(() => {
     const storedCurrentUser = localStorage.getItem("currentUser")
     const storedUsersData = localStorage.getItem("charityUsers")
-    const existingUsers: User[] = storedUsersData ? JSON.parse(storedUsersData) : []
+    const existingUsers: CharityUser[] = storedUsersData ? JSON.parse(storedUsersData) : []
     const currentUserEmail = storedCurrentUser
     setIsAuth(!!currentUserEmail)
     if (currentUserEmail) {
-      const currentUser = existingUsers.find(u => u.email === currentUserEmail)
+      const currentUser = existingUsers.find((u) => u.email === currentUserEmail)
       setUser(currentUser || null)
     } else {
       setUser(null)
@@ -59,7 +59,6 @@ export function Navigation() {
     }
   }, [isProfileDropdownOpen])
 
-  // Determine dashboard link
   const getDashboardLink = () => {
     if (!user?.userType) return null
     switch (user.userType) {
@@ -94,30 +93,43 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="flex items-center space-x-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <FlowerIcon className="text-background"/>
+              <FlowerIcon className="text-background" />
             </div>
             <span className="text-xl font-bold">danai</span>
           </Link>
           <div className="hidden md:flex items-center space-x-6">
-            <Link href="/community" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/community"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
               <Users className="w-4 h-4" />
               <span>Communities</span>
             </Link>
-            <Link href="/opportunities" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/opportunities"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
               <Calendar className="w-4 h-4" />
               <span>Opportunities</span>
             </Link>
-            <Link href="/location" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors">
+            <Link
+              href="/location"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
               <School2 className="w-4 h-4" />
               <span>Schools</span>
             </Link>
           </div>
 
-          {/* Profile / Auth Buttons */}
           <div className="hidden md:flex items-center gap-3 relative">
             {!isAuth ? (
               <>
-                <Button variant="outline" size="default" className="glass-hover" onClick={() => router.push("/auth")}>
+                <Button
+                  variant="outline"
+                  size="default"
+                  className="glass-hover bg-transparent"
+                  onClick={() => router.push("/auth")}
+                >
                   Sign In
                 </Button>
                 <Button size="default" className="bg-primary hover:bg-primary/90" onClick={() => router.push("/auth")}>
@@ -129,7 +141,7 @@ export function Navigation() {
                 <Button
                   variant="outline"
                   size="default"
-                  className="glass-hover flex items-center space-x-2"
+                  className="glass-hover flex items-center space-x-2 bg-transparent"
                   onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
                   aria-expanded={isProfileDropdownOpen}
                   aria-haspopup="true"
@@ -147,20 +159,43 @@ export function Navigation() {
                       <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                     </div>
 
-                    {/* Dashboard Link */}
-                    {getDashboardLink() && (
-                      <div
+                    <div className="p-2 space-y-1">
+                      {getDashboardLink() && (
+                        <button
+                          onClick={() => {
+                            router.push(getDashboardLink()!)
+                            setIsProfileDropdownOpen(false)
+                          }}
+                          className="w-full flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors font-medium text-left"
+                        >
+                          <span>{dashboardLabel()}</span>
+                        </button>
+                      )}
+
+                      <button
                         onClick={() => {
-                          router.push(getDashboardLink()!)
+                          router.push("/profile")
                           setIsProfileDropdownOpen(false)
                         }}
-                        className="w-full flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg cursor-pointer transition-colors font-medium"
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors text-left"
                       >
-                        <span>{dashboardLabel()}</span>
-                      </div>
-                    )}
+                        <User className="w-4 h-4" />
+                        <span>Edit Profile</span>
+                      </button>
 
-                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          router.push("/rewards")
+                          setIsProfileDropdownOpen(false)
+                        }}
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors text-left"
+                      >
+                        <Gift className="w-4 h-4" />
+                        <span>Rewards</span>
+                      </button>
+                    </div>
+
+                    <div className="p-2 border-t">
                       <button
                         onClick={handleSignOut}
                         className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-lg transition-colors group"
@@ -175,7 +210,6 @@ export function Navigation() {
             )}
           </div>
 
-          {/* Mobile menu toggle */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden p-2 text-foreground hover:bg-accent rounded-lg transition-all duration-200 active:scale-95"
@@ -192,18 +226,28 @@ export function Navigation() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        <div className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
+        <div
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
+        >
           <div className="pb-4 space-y-1">
-            <Link href="/community" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200">
+            <Link
+              href="/community"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+            >
               <Users className="w-4 h-4" />
               <span>Communities</span>
             </Link>
-            <Link href="/opportunities" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200">
+            <Link
+              href="/opportunities"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+            >
               <Calendar className="w-4 h-4" />
               <span>Opportunities</span>
             </Link>
-            <Link href="/location" className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200">
+            <Link
+              href="/location"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+            >
               <School2 className="w-4 h-4" />
               <span>Schools</span>
             </Link>
@@ -211,8 +255,21 @@ export function Navigation() {
             <div className="flex flex-col gap-2 pt-3">
               {!isAuth ? (
                 <>
-                  <Button variant="outline" size="default" className="w-full glass-hover" onClick={() => router.push("/auth")}>Sign In</Button>
-                  <Button size="default" className="w-full bg-primary hover:bg-primary/90" onClick={() => router.push("/auth")}>Get Started</Button>
+                  <Button
+                    variant="outline"
+                    size="default"
+                    className="w-full glass-hover bg-transparent"
+                    onClick={() => router.push("/auth")}
+                  >
+                    Sign In
+                  </Button>
+                  <Button
+                    size="default"
+                    className="w-full bg-primary hover:bg-primary/90"
+                    onClick={() => router.push("/auth")}
+                  >
+                    Get Started
+                  </Button>
                 </>
               ) : (
                 <>
@@ -222,12 +279,35 @@ export function Navigation() {
                         router.push(getDashboardLink()!)
                         setIsOpen(false)
                       }}
-                      className="w-full bg-accent/10 rounded-xl py-2"
+                      variant="outline"
+                      className="w-full"
                     >
                       {dashboardLabel()}
                     </Button>
                   )}
-                  <Button onClick={handleSignOut} className="w-full bg-destructive/10 rounded-xl py-2">
+                  <Button
+                    onClick={() => {
+                      router.push("/profile")
+                      setIsOpen(false)
+                    }}
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <User className="w-4 h-4" />
+                    Edit Profile
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      router.push("/rewards")
+                      setIsOpen(false)
+                    }}
+                    variant="outline"
+                    className="w-full flex items-center justify-center gap-2"
+                  >
+                    <Gift className="w-4 h-4" />
+                    Rewards
+                  </Button>
+                  <Button onClick={handleSignOut} variant="destructive" className="w-full">
                     Sign Out
                   </Button>
                 </>

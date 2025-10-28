@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
@@ -18,75 +19,50 @@ import {
   Star,
   Clock,
   ArrowRight,
-  Plus,
+  Send,
+  Building2,
+  Leaf,
+  GraduationCap,
+  Stethoscope,
+  HandHeart,
 } from "lucide-react"
+import { SharedDataStore, type Community, type Event, type Post } from "@/lib/shared-data-store"
 
-interface Community {
-  id: number
-  name: string
-  description: string
-  members: number
-  category: string
-  location: string
-  image: string
-  rating: number
-  events: number
-  posts: number
-  isJoined: boolean
-}
-
-interface Event {
-  id: number
-  title: string
-  community: string
-  date: string
-  time: string
-  location: string
-  attendees: number
-  maxAttendees: number
-  description: string
-  category: string
-  isRegistered: boolean
-}
-
-interface Post {
-  id: number
-  author: string
-  avatar: string
-  community: string
-  content: string
-  timestamp: string
-  likes: number
-  comments: number
-  isLiked: boolean
+const categoryIcons: Record<string, any> = {
+  "Humanitarian Aid": HandHeart,
+  Education: GraduationCap,
+  Environment: Leaf,
+  Healthcare: Stethoscope,
+  "Social Welfare": Users,
+  "Disability Support": Heart,
 }
 
 const communities: Community[] = [
   {
     id: 1,
     name: "Emirates Red Crescent",
-    description: "Leading humanitarian organization providing aid and disaster relief across the UAE and internationally.",
+    description:
+      "Leading humanitarian organization providing aid and disaster relief across the UAE and internationally.",
     members: 1250,
     category: "Humanitarian Aid",
     location: "Dubai, UAE",
-    image: "/food-bank-volunteers.png",
+    image: "https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=400&h=300&fit=crop",
     rating: 4.9,
     events: 25,
     posts: 189,
-    isJoined: false,
   },
   {
     id: 2,
     name: "Dubai Cares",
-    description: "Improving access to quality education for children in developing countries through integrated programs.",
+    description:
+      "Improving access to quality education for children in developing countries through integrated programs.",
     members: 890,
     category: "Education",
     location: "Dubai, UAE",
-    image: "/placeholder-1kxbb.png",
+    image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=400&h=300&fit=crop",
     rating: 4.8,
     events: 18,
     posts: 156,
-    isJoined: true,
   },
   {
     id: 3,
@@ -95,11 +71,10 @@ const communities: Community[] = [
     members: 445,
     category: "Environment",
     location: "Dubai, UAE",
-    image: "/community-garden-volunteers.png",
+    image: "https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400&h=300&fit=crop",
     rating: 4.7,
     events: 15,
     posts: 203,
-    isJoined: false,
   },
   {
     id: 4,
@@ -108,24 +83,23 @@ const communities: Community[] = [
     members: 567,
     category: "Healthcare",
     location: "Dubai, UAE",
-    image: "/senior-care-volunteers.jpg",
+    image: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?w=400&h=300&fit=crop",
     rating: 4.9,
     events: 12,
     posts: 134,
-    isJoined: true,
   },
   {
     id: 5,
     name: "Beit Al Khair Society",
-    description: "Comprehensive social services including housing, healthcare, and education support for families in need.",
+    description:
+      "Comprehensive social services including housing, healthcare, and education support for families in need.",
     members: 734,
     category: "Social Welfare",
     location: "Dubai, UAE",
-    image: "/food-bank-volunteers.png",
+    image: "https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=400&h=300&fit=crop",
     rating: 4.8,
     events: 22,
     posts: 198,
-    isJoined: false,
   },
   {
     id: 6,
@@ -134,11 +108,10 @@ const communities: Community[] = [
     members: 312,
     category: "Disability Support",
     location: "Abu Dhabi, UAE",
-    image: "/senior-care-volunteers.jpg",
+    image: "https://images.unsplash.com/photo-1469571486292-0ba58a3f068b?w=400&h=300&fit=crop",
     rating: 4.9,
     events: 20,
     posts: 156,
-    isJoined: false,
   },
 ]
 
@@ -152,9 +125,9 @@ const events: Event[] = [
     location: "Dubai Community Center",
     attendees: 85,
     maxAttendees: 100,
-    description: "Join us in distributing food packages to families in need during Ramadan. Volunteers needed for packing and delivery.",
+    description:
+      "Join us in distributing food packages to families in need during Ramadan. Volunteers needed for packing and delivery.",
     category: "Humanitarian Aid",
-    isRegistered: false,
   },
   {
     id: 2,
@@ -165,9 +138,9 @@ const events: Event[] = [
     location: "Dubai Knowledge Park",
     attendees: 45,
     maxAttendees: 50,
-    description: "Mentor students from developing countries studying in the UAE. Share your expertise and inspire future leaders.",
+    description:
+      "Mentor students from developing countries studying in the UAE. Share your expertise and inspire future leaders.",
     category: "Education",
-    isRegistered: true,
   },
   {
     id: 3,
@@ -180,7 +153,6 @@ const events: Event[] = [
     maxAttendees: 150,
     description: "Help keep our beaches clean. Join us for a morning beach cleanup with refreshments provided.",
     category: "Environment",
-    isRegistered: false,
   },
   {
     id: 4,
@@ -193,43 +165,6 @@ const events: Event[] = [
     maxAttendees: 200,
     description: "Annual fundraising gala to support medical research and treatment programs across the region.",
     category: "Healthcare",
-    isRegistered: true,
-  },
-]
-
-const posts: Post[] = [
-  {
-    id: 1,
-    author: "Fatima Al Mansoori",
-    avatar: "/woman-volunteer.jpg",
-    community: "Dubai Cares",
-    content: "Incredible experience mentoring 30 students today at our education workshop. Seeing their enthusiasm for learning reminds us why we do this work. Thank you to all volunteers who joined us!",
-    timestamp: "3 hours ago",
-    likes: 42,
-    comments: 12,
-    isLiked: false,
-  },
-  {
-    id: 2,
-    author: "Ahmed Hassan",
-    avatar: "/man-volunteer.jpg",
-    community: "Emirates Red Crescent",
-    content: "This week we supported over 800 families across the UAE. The generosity of our community never ceases to amaze me. Together we're making a real difference.",
-    timestamp: "6 hours ago",
-    likes: 67,
-    comments: 18,
-    isLiked: true,
-  },
-  {
-    id: 3,
-    author: "Maryam Khalid",
-    avatar: "/woman-environmentalist.jpg",
-    community: "Emirates Environmental Group",
-    content: "Our tree planting initiative reached 5,000 trees this month! Working together to create a greener, more sustainable UAE for future generations.",
-    timestamp: "1 day ago",
-    likes: 38,
-    comments: 9,
-    isLiked: false,
   },
 ]
 
@@ -242,9 +177,93 @@ const categoryColors = {
   "Disability Support": "bg-pink-500/20 text-pink-400 border-pink-500/30",
 }
 
+function getTimeAgo(timestamp: string): string {
+  const now = new Date()
+  const past = new Date(timestamp)
+  const diffMs = now.getTime() - past.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return "Just now"
+  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? "s" : ""} ago`
+  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`
+  return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`
+}
+
 export function CommunityHub() {
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("communities")
+  const [posts, setPosts] = useState<Post[]>([])
+  const [newPostContent, setNewPostContent] = useState("")
+  const [currentUser, setCurrentUser] = useState<{ email: string; name: string } | null>(null)
+  const [userJoins, setUserJoins] = useState({
+    communities: [] as number[],
+    events: [] as number[],
+    opportunities: [] as number[],
+  })
+
+  useEffect(() => {
+    SharedDataStore.initializeSampleData()
+
+    const userEmail = localStorage.getItem("currentUser")
+    if (userEmail) {
+      const usersData = localStorage.getItem("charityUsers")
+      if (usersData) {
+        const users = JSON.parse(usersData)
+        const user = users.find((u: any) => u.email === userEmail)
+        if (user) {
+          setCurrentUser({ email: user.email, name: user.name })
+        }
+      }
+    }
+    loadPosts()
+    loadUserJoins()
+  }, [])
+
+  const loadPosts = () => {
+    setPosts(SharedDataStore.getPosts())
+  }
+
+  const loadUserJoins = () => {
+    const userEmail = localStorage.getItem("currentUser")
+    if (userEmail) {
+      setUserJoins(SharedDataStore.getUserJoins(userEmail))
+    }
+  }
+
+  const handlePostSubmit = () => {
+    if (!newPostContent.trim() || !currentUser) return
+
+    SharedDataStore.addPost({
+      author: currentUser.name,
+      authorEmail: currentUser.email,
+      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.email}`,
+      community: "General",
+      content: newPostContent,
+    })
+
+    setNewPostContent("")
+    loadPosts()
+  }
+
+  const handleToggleLike = (postId: number) => {
+    if (!currentUser) return
+    SharedDataStore.toggleLike(postId, currentUser.email)
+    loadPosts()
+  }
+
+  const handleJoinCommunity = (communityId: number) => {
+    if (!currentUser) return
+    SharedDataStore.toggleJoinCommunity(currentUser.email, communityId)
+    loadUserJoins()
+  }
+
+  const handleJoinEvent = (eventId: number) => {
+    if (!currentUser) return
+    SharedDataStore.toggleJoinEvent(currentUser.email, eventId)
+    loadUserJoins()
+  }
 
   const filteredCommunities = communities.filter(
     (c) =>
@@ -271,9 +290,10 @@ export function CommunityHub() {
     <section className="py-16 relative overflow-hidden bg-neutral-900">
       <div className="absolute inset-0 opacity-20">
         <div className="absolute top-20 left-10 w-72 h-72 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1000ms' }} />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2000ms' }} />
-        <div className="absolute top-40 right-1/4 w-60 h-60 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '500ms' }} />
+        <div
+          className="absolute bottom-20 right-10 w-96 h-96 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full blur-3xl animate-pulse"
+          style={{ animationDelay: "1000ms" }}
+        />
       </div>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -282,7 +302,8 @@ export function CommunityHub() {
             Connect with <span className="text-fuchsia-200">UAE</span> communities
           </h1>
           <p className="text-gray-300 text-sm md:text-base max-w-xl mx-auto">
-            Join charity organizations, discover volunteer opportunities, and share your impact with like-minded individuals.
+            Join charity organizations, discover volunteer opportunities, and share your impact with like-minded
+            individuals.
           </p>
         </div>
 
@@ -301,15 +322,24 @@ export function CommunityHub() {
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-3 rounded-lg bg-neutral-900/50 border border-purple-500/20 text-sm">
-              <TabsTrigger value="communities" className="flex items-center justify-center py-1 rounded-lg hover:bg-purple-700/20 transition">
+              <TabsTrigger
+                value="communities"
+                className="flex items-center justify-center gap-2 py-1 rounded-lg hover:bg-purple-700/20 transition"
+              >
                 <Users className="w-3 h-3" />
                 <span className="hidden sm:inline">Communities</span>
               </TabsTrigger>
-              <TabsTrigger value="events" className="flex items-center justify-center py-1 rounded-lg hover:bg-purple-700/20 transition">
+              <TabsTrigger
+                value="events"
+                className="flex items-center justify-center gap-2 py-1 rounded-lg hover:bg-purple-700/20 transition"
+              >
                 <Calendar className="w-3 h-3" />
                 <span className="hidden sm:inline">Events</span>
               </TabsTrigger>
-              <TabsTrigger value="feed" className="flex items-center justify-center py-1 rounded-lg hover:bg-purple-700/20 transition">
+              <TabsTrigger
+                value="feed"
+                className="flex items-center justify-center gap-2 py-1 rounded-lg hover:bg-purple-700/20 transition"
+              >
                 <MessageCircle className="w-3 h-3" />
                 <span className="hidden sm:inline">Feed</span>
               </TabsTrigger>
@@ -317,123 +347,222 @@ export function CommunityHub() {
 
             <TabsContent value="communities" className="mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredCommunities.map((c) => (
-                  <Card key={c.id} className="bg-neutral-800/60 border border-purple-500/20 rounded-xl overflow-hidden hover:scale-[1.01] transition-transform text-sm">
-                    <div className="p-3">
-                      <div className="relative rounded-lg overflow-hidden mb-3">
-                        <img src={c.image || "/placeholder.svg"} alt={c.name} className="w-full h-32 object-cover rounded-lg" />
-                        <div className="absolute top-2 left-2">
-                          <Badge variant="outline" className={categoryColors[c.category as keyof typeof categoryColors]}>
-                            {c.category}
-                          </Badge>
+                {filteredCommunities.map((c) => {
+                  const Icon = categoryIcons[c.category] || Building2
+                  const isJoined = userJoins.communities.includes(c.id)
+                  return (
+                    <Card
+                      key={c.id}
+                      className="bg-neutral-800/60 border border-purple-500/20 rounded-xl overflow-hidden hover:scale-[1.01] transition-transform text-sm"
+                    >
+                      <div className="p-3">
+                        <div className="relative rounded-lg overflow-hidden mb-3">
+                          <img
+                            src={c.image || "/placeholder.svg"}
+                            alt={c.name}
+                            className="w-full h-32 object-cover rounded-lg"
+                          />
+                          <div className="absolute top-2 left-2">
+                            <Badge
+                              variant="outline"
+                              className={categoryColors[c.category as keyof typeof categoryColors]}
+                            >
+                              <Icon className="w-3 h-3 mr-1" />
+                              {c.category}
+                            </Badge>
+                          </div>
+                          <div className="absolute top-2 right-2 bg-black/30 rounded-full px-2 py-0.5 flex items-center gap-1 text-white text-xs">
+                            <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                            {c.rating}
+                          </div>
                         </div>
-                        <div className="absolute top-2 right-2 bg-black/30 rounded-full px-2 py-0.5 flex items-center gap-1 text-white text-xs">
-                          <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                          {c.rating}
+
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="font-semibold text-white">{c.name}</span>
+                          {isJoined && (
+                            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Joined</Badge>
+                          )}
+                        </div>
+                        <p className="text-gray-300 text-xs mb-2">{c.description}</p>
+
+                        <div className="flex justify-between text-gray-400 text-xs mb-2">
+                          <span>{c.members} Members</span>
+                          <span>{c.events} Events</span>
+                          <span>{c.posts} Posts</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-gray-400 text-xs mb-3">
+                          <MapPin className="w-3 h-3" /> {c.location}
+                        </div>
+
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleJoinCommunity(c.id)}
+                            className={`flex-1 text-xs py-1 ${isJoined ? "bg-gray-600 hover:bg-gray-500" : "bg-gradient-to-r from-purple-500 to-blue-300 hover:from-purple-700 hover:to-blue-700"}`}
+                          >
+                            {isJoined ? "Leave" : "Join"}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="border border-purple-500/30 text-gray-300 py-1 bg-transparent"
+                          >
+                            <Share2 className="w-3 h-3" />
+                          </Button>
                         </div>
                       </div>
-
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-semibold text-white">{c.name}</span>
-                        {c.isJoined && (
-                          <Badge className="bg-green-500/20 text-green-400 border-green-500/30 text-xs">Joined</Badge>
-                        )}
-                      </div>
-                      <p className="text-gray-300 text-xs mb-2">{c.description}</p>
-
-                      <div className="flex justify-between text-gray-400 text-xs mb-2">
-                        <span>{c.members} Members</span>
-                        <span>{c.events} Events</span>
-                        <span>{c.posts} Posts</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-gray-400 text-xs mb-3">
-                        <MapPin className="w-3 h-3" /> {c.location}
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button className={`flex-1 text-xs py-1 ${c.isJoined ? "bg-gray-300 hover:bg-gray-500" : "bg-gradient-to-r from-purple-500 to-blue-300 hover:from-purple-700 hover:to-blue-700"}`}>
-                          {c.isJoined ? "View" : "Join"}
-                        </Button>
-                        <Button variant="outline" className="border border-purple-500/30 text-gray-300 py-1">
-                          <Share2 className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  )
+                })}
               </div>
             </TabsContent>
 
             <TabsContent value="events" className="mt-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredEvents.map((e) => (
-                  <Card key={e.id} className="bg-neutral-800/60 border border-purple-500/20 rounded-xl overflow-hidden hover:scale-[1.01] transition-transform text-sm p-3">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="font-semibold text-white">{e.title}</span>
-                      <Badge variant="outline" className={categoryColors[e.category as keyof typeof categoryColors]}>
-                        {e.category}
-                      </Badge>
-                    </div>
-                    <p className="text-gray-300 text-xs mb-1">{e.community}</p>
-                    <p className="text-gray-400 text-xs mb-2">{e.description}</p>
-                    <div className="grid grid-cols-2 gap-2 text-gray-400 text-xs mb-2">
-                      <div className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(e.date).toLocaleDateString()}</div>
-                      <div className="flex items-center gap-1"><Clock className="w-3 h-3" /> {e.time}</div>
-                      <div className="flex items-center gap-1"><MapPin className="w-3 h-3" /> {e.location}</div>
-                      <div className="flex items-center gap-1"><Users className="w-3 h-3" /> {e.attendees}/{e.maxAttendees}</div>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-1 mb-2">
-                      <div
-                        className="bg-gradient-to-r from-purple-600 to-blue-600 h-1 rounded-full transition-all duration-300"
-                        style={{ width: `${(e.attendees / e.maxAttendees) * 100}%` }}
-                      />
-                    </div>
-                    <div className="flex gap-2">
-                      <Button className={`flex-1 text-xs py-1 ${e.isRegistered ? "bg-gray-700 hover:bg-gray-600" : "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"}`}>
-                        {e.isRegistered ? "Registered" : "Register"}
-                        {!e.isRegistered && <ArrowRight className="w-3 h-3 ml-1" />}
-                      </Button>
-                      <Button variant="outline" className="border border-purple-500/30 text-gray-300 py-1">
-                        <Share2 className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </Card>
-                ))}
+                {filteredEvents.map((e) => {
+                  const isRegistered = userJoins.events.includes(e.id)
+                  return (
+                    <Card
+                      key={e.id}
+                      className="bg-neutral-800/60 border border-purple-500/20 rounded-xl overflow-hidden hover:scale-[1.01] transition-transform text-sm p-3"
+                    >
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-semibold text-white">{e.title}</span>
+                        <Badge variant="outline" className={categoryColors[e.category as keyof typeof categoryColors]}>
+                          {e.category}
+                        </Badge>
+                      </div>
+                      <p className="text-gray-300 text-xs mb-1">{e.community}</p>
+                      <p className="text-gray-400 text-xs mb-2">{e.description}</p>
+                      <div className="grid grid-cols-2 gap-2 text-gray-400 text-xs mb-2">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" /> {new Date(e.date).toLocaleDateString()}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {e.time}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPin className="w-3 h-3" /> {e.location}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Users className="w-3 h-3" /> {e.attendees}/{e.maxAttendees}
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-1 mb-2">
+                        <div
+                          className="bg-gradient-to-r from-purple-600 to-blue-600 h-1 rounded-full transition-all duration-300"
+                          style={{ width: `${(e.attendees / e.maxAttendees) * 100}%` }}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleJoinEvent(e.id)}
+                          className={`flex-1 text-xs py-1 ${isRegistered ? "bg-gray-700 hover:bg-gray-600" : "bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"}`}
+                        >
+                          {isRegistered ? "Registered" : "Register"}
+                          {!isRegistered && <ArrowRight className="w-3 h-3 ml-1" />}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="border border-purple-500/30 text-gray-300 py-1 bg-transparent"
+                        >
+                          <Share2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </Card>
+                  )
+                })}
               </div>
             </TabsContent>
 
             <TabsContent value="feed" className="mt-6">
+              {currentUser && (
+                <Card className="bg-neutral-800/60 border border-purple-500/20 rounded-xl p-4 mb-4">
+                  <div className="flex gap-3">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser.email}`} />
+                      <AvatarFallback>
+                        {currentUser.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .join("")}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                      <Textarea
+                        placeholder="Share your volunteer experience..."
+                        value={newPostContent}
+                        onChange={(e) => setNewPostContent(e.target.value)}
+                        className="bg-neutral-900/50 border-gray-700 text-sm min-h-[80px] mb-2"
+                      />
+                      <Button
+                        onClick={handlePostSubmit}
+                        disabled={!newPostContent.trim()}
+                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                      >
+                        <Send className="w-4 h-4 mr-2" />
+                        Post
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
               <div className="space-y-3">
-                {filteredPosts.map((p) => (
-                  <Card key={p.id} className="bg-neutral-800/60 border border-purple-500/20 rounded-xl overflow-hidden hover:scale-[1.01] transition-transform text-sm p-3">
-                    <div className="flex items-start gap-2">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={p.avatar || "/placeholder.svg"} alt={p.author} />
-                        <AvatarFallback>{p.author.split(" ").map(n => n[0]).join("")}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <div className="flex justify-between items-center mb-1">
-                          <div>
-                            <span className="font-semibold text-white text-xs">{p.author}</span>
-                            <p className="text-gray-400 text-[10px]">{p.community} • {p.timestamp}</p>
+                {filteredPosts.map((p) => {
+                  const isLiked = currentUser ? p.likedBy.includes(currentUser.email) : false
+                  return (
+                    <Card
+                      key={p.id}
+                      className="bg-neutral-800/60 border border-purple-500/20 rounded-xl overflow-hidden hover:scale-[1.01] transition-transform text-sm p-3"
+                    >
+                      <div className="flex items-start gap-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={p.avatar || "/placeholder.svg"} alt={p.author} />
+                          <AvatarFallback>
+                            {p.author
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex justify-between items-center mb-1">
+                            <div>
+                              <span className="font-semibold text-white text-xs">{p.author}</span>
+                              <p className="text-gray-400 text-[10px]">
+                                {p.community} • {getTimeAgo(p.timestamp)}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-gray-300 text-xs mb-2">{p.content}</p>
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleToggleLike(p.id)}
+                              className={`flex items-center gap-1 h-6 px-2 ${isLiked ? "text-red-400" : "text-gray-400"}`}
+                            >
+                              <Heart className={`w-3 h-3 ${isLiked ? "fill-current" : ""}`} /> {p.likes}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center gap-1 text-gray-400 h-6 px-2"
+                            >
+                              <MessageCircle className="w-3 h-3" /> {p.comments}
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex items-center gap-1 text-gray-400 h-6 px-2"
+                            >
+                              <Share2 className="w-3 h-3" /> <span className="hidden sm:inline text-xs">Share</span>
+                            </Button>
                           </div>
                         </div>
-                        <p className="text-gray-300 text-xs mb-2">{p.content}</p>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" className={`flex items-center gap-1 h-6 px-2 ${p.isLiked ? "text-red-400" : "text-gray-400"}`}>
-                            <Heart className={`w-3 h-3 ${p.isLiked ? "fill-current" : ""}`} /> {p.likes}
-                          </Button>
-                          <Button variant="ghost" size="sm" className="flex items-center gap-1 text-gray-400 h-6 px-2">
-                            <MessageCircle className="w-3 h-3" /> {p.comments}
-                          </Button>
-                          <Button variant="ghost" size="sm" className="flex items-center gap-1 text-gray-400 h-6 px-2">
-                            <Share2 className="w-3 h-3" /> <span className="hidden sm:inline text-xs">Share</span>
-                          </Button>
-                        </div>
                       </div>
-                    </div>
-                  </Card>
-                ))}
+                    </Card>
+                  )
+                })}
               </div>
             </TabsContent>
           </Tabs>
