@@ -1,31 +1,16 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
-import {
-  FlowerIcon,
-  Users,
-  Calendar,
-  School2,
-  Menu,
-  X,
-  UserCircle,
-  LogOut,
-  User,
-  Gift,
-  ChevronDown,
-  Heart,
-  Info,
-  Sparkles,
-} from "lucide-react"
+import { FlowerIcon, Users, Calendar, School2, Menu, X, UserCircle, LogOut, User, Gift, Info } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
 interface CharityUser {
-  id: number
   name: string
   email: string
   password: string
   userType?: "school" | "ngo" | "admin" | "student" | "volunteer"
+  school?: string
 }
 
 export function Navigation() {
@@ -34,9 +19,7 @@ export function Navigation() {
   const [user, setUser] = useState<CharityUser | null>(null)
   const router = useRouter()
   const dropdownRef = useRef<HTMLDivElement>(null)
-  const aboutDropdownRef = useRef<HTMLDivElement>(null)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
-  const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false)
 
   const handleSignOut = () => {
     localStorage.removeItem("currentUser")
@@ -44,16 +27,17 @@ export function Navigation() {
     setUser(null)
     setIsProfileDropdownOpen(false)
     setIsOpen(false)
+    router.push("/")
   }
 
   useEffect(() => {
-    const currentUserEmail = localStorage.getItem("currentUser")
-    setIsAuth(!!currentUserEmail)
-    if (currentUserEmail) {
-      const userData = localStorage.getItem(`user_${currentUserEmail}`)
+    const storedCurrentUser = localStorage.getItem("currentUser")
+    setIsAuth(!!storedCurrentUser)
+    if (storedCurrentUser) {
+      const userKey = `user_${storedCurrentUser}`
+      const userData = localStorage.getItem(userKey)
       if (userData) {
-        const parsedUser = JSON.parse(userData)
-        setUser(parsedUser)
+        setUser(JSON.parse(userData))
       }
     } else {
       setUser(null)
@@ -65,19 +49,16 @@ export function Navigation() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProfileDropdownOpen(false)
       }
-      if (aboutDropdownRef.current && !aboutDropdownRef.current.contains(event.target as Node)) {
-        setIsAboutDropdownOpen(false)
-      }
     }
 
-    if (isProfileDropdownOpen || isAboutDropdownOpen) {
+    if (isProfileDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside)
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [isProfileDropdownOpen, isAboutDropdownOpen])
+  }, [isProfileDropdownOpen])
 
   const getDashboardLink = () => {
     if (!user?.userType) return "/dashboard"
@@ -147,47 +128,13 @@ export function Navigation() {
               <School2 className="w-4 h-4" />
               <span>Schools</span>
             </Link>
-
-            <div className="relative" ref={aboutDropdownRef}>
-              <button
-                onClick={() => setIsAboutDropdownOpen(!isAboutDropdownOpen)}
-                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <Info className="w-4 h-4" />
-                <span>About Us</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${isAboutDropdownOpen ? "rotate-180" : ""}`} />
-              </button>
-              {isAboutDropdownOpen && (
-                <div className="absolute left-0 top-full mt-2 bg-background border rounded-xl shadow-lg overflow-hidden min-w-48 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2">
-                  <div className="p-2 space-y-1">
-                    <Link
-                      href="/about"
-                      onClick={() => setIsAboutDropdownOpen(false)}
-                      className="flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors"
-                    >
-                      <Info className="w-4 h-4" />
-                      <span>About Danai</span>
-                    </Link>
-                    <Link
-                      href="/why-danai"
-                      onClick={() => setIsAboutDropdownOpen(false)}
-                      className="flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>Why Danai</span>
-                    </Link>
-                    <Link
-                      href="/donate"
-                      onClick={() => setIsAboutDropdownOpen(false)}
-                      className="flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors"
-                    >
-                      <Heart className="w-4 h-4" />
-                      <span>Donate to Us</span>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
+            <Link
+              href="/about"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Info className="w-4 h-4" />
+              <span>About</span>
+            </Link>
           </div>
 
           <div className="hidden md:flex items-center gap-3 relative">
@@ -294,7 +241,7 @@ export function Navigation() {
         </div>
 
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
         >
           <div className="pb-4 space-y-1">
             <Link
@@ -321,34 +268,14 @@ export function Navigation() {
               <School2 className="w-4 h-4" />
               <span>Schools</span>
             </Link>
-
-            <div className="space-y-1 pt-2">
-              <div className="text-xs font-semibold text-muted-foreground px-2 py-1">About Us</div>
-              <Link
-                href="/about"
-                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
-                onClick={() => setIsOpen(false)}
-              >
-                <Info className="w-4 h-4" />
-                <span>About Danai</span>
-              </Link>
-              <Link
-                href="/why-danai"
-                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
-                onClick={() => setIsOpen(false)}
-              >
-                <Sparkles className="w-4 h-4" />
-                <span>Why Danai</span>
-              </Link>
-              <Link
-                href="/donate"
-                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
-                onClick={() => setIsOpen(false)}
-              >
-                <Heart className="w-4 h-4" />
-                <span>Donate to Us</span>
-              </Link>
-            </div>
+            <Link
+              href="/about"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+              onClick={() => setIsOpen(false)}
+            >
+              <Info className="w-4 h-4" />
+              <span>About</span>
+            </Link>
 
             <div className="flex flex-col gap-2 pt-3">
               {!isAuth ? (
