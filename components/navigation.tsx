@@ -1,6 +1,21 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
-import { FlowerIcon, Users, Calendar, School2, Menu, X, UserCircle, LogOut, User, Gift } from "lucide-react"
+import {
+  FlowerIcon,
+  Users,
+  Calendar,
+  School2,
+  Menu,
+  X,
+  UserCircle,
+  LogOut,
+  User,
+  Gift,
+  ChevronDown,
+  Heart,
+  Info,
+  Sparkles,
+} from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
@@ -10,7 +25,7 @@ interface CharityUser {
   name: string
   email: string
   password: string
-  userType?: "school" | "ngo" | "admin"
+  userType?: "school" | "ngo" | "admin" | "student" | "volunteer"
 }
 
 export function Navigation() {
@@ -19,7 +34,9 @@ export function Navigation() {
   const [user, setUser] = useState<CharityUser | null>(null)
   const router = useRouter()
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const aboutDropdownRef = useRef<HTMLDivElement>(null)
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false)
+  const [isAboutDropdownOpen, setIsAboutDropdownOpen] = useState(false)
 
   const handleSignOut = () => {
     localStorage.removeItem("currentUser")
@@ -30,14 +47,14 @@ export function Navigation() {
   }
 
   useEffect(() => {
-    const storedCurrentUser = localStorage.getItem("currentUser")
-    const storedUsersData = localStorage.getItem("charityUsers")
-    const existingUsers: CharityUser[] = storedUsersData ? JSON.parse(storedUsersData) : []
-    const currentUserEmail = storedCurrentUser
+    const currentUserEmail = localStorage.getItem("currentUser")
     setIsAuth(!!currentUserEmail)
     if (currentUserEmail) {
-      const currentUser = existingUsers.find((u) => u.email === currentUserEmail)
-      setUser(currentUser || null)
+      const userData = localStorage.getItem(`user_${currentUserEmail}`)
+      if (userData) {
+        const parsedUser = JSON.parse(userData)
+        setUser(parsedUser)
+      }
     } else {
       setUser(null)
     }
@@ -48,19 +65,22 @@ export function Navigation() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setIsProfileDropdownOpen(false)
       }
+      if (aboutDropdownRef.current && !aboutDropdownRef.current.contains(event.target as Node)) {
+        setIsAboutDropdownOpen(false)
+      }
     }
 
-    if (isProfileDropdownOpen) {
+    if (isProfileDropdownOpen || isAboutDropdownOpen) {
       document.addEventListener("mousedown", handleClickOutside)
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [isProfileDropdownOpen])
+  }, [isProfileDropdownOpen, isAboutDropdownOpen])
 
   const getDashboardLink = () => {
-    if (!user?.userType) return null
+    if (!user?.userType) return "/dashboard"
     switch (user.userType) {
       case "admin":
         return "/admin"
@@ -68,13 +88,17 @@ export function Navigation() {
         return "/school-dashboard"
       case "ngo":
         return "/ngo-dashboard"
+      case "student":
+        return "/student-dashboard"
+      case "volunteer":
+        return "/dashboard"
       default:
-        return null
+        return "/dashboard"
     }
   }
 
   const dashboardLabel = () => {
-    if (!user?.userType) return null
+    if (!user?.userType) return "Dashboard"
     switch (user.userType) {
       case "admin":
         return "Admin Page"
@@ -82,8 +106,12 @@ export function Navigation() {
         return "School Dashboard"
       case "ngo":
         return "NGO Dashboard"
+      case "student":
+        return "Student Dashboard"
+      case "volunteer":
+        return "Dashboard"
       default:
-        return null
+        return "Dashboard"
     }
   }
 
@@ -119,6 +147,47 @@ export function Navigation() {
               <School2 className="w-4 h-4" />
               <span>Schools</span>
             </Link>
+
+            <div className="relative" ref={aboutDropdownRef}>
+              <button
+                onClick={() => setIsAboutDropdownOpen(!isAboutDropdownOpen)}
+                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Info className="w-4 h-4" />
+                <span>About Us</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${isAboutDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+              {isAboutDropdownOpen && (
+                <div className="absolute left-0 top-full mt-2 bg-background border rounded-xl shadow-lg overflow-hidden min-w-48 animate-in fade-in-0 zoom-in-95 slide-in-from-top-2">
+                  <div className="p-2 space-y-1">
+                    <Link
+                      href="/about"
+                      onClick={() => setIsAboutDropdownOpen(false)}
+                      className="flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors"
+                    >
+                      <Info className="w-4 h-4" />
+                      <span>About Danai</span>
+                    </Link>
+                    <Link
+                      href="/why-danai"
+                      onClick={() => setIsAboutDropdownOpen(false)}
+                      className="flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span>Why Danai</span>
+                    </Link>
+                    <Link
+                      href="/donate"
+                      onClick={() => setIsAboutDropdownOpen(false)}
+                      className="flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors"
+                    >
+                      <Heart className="w-4 h-4" />
+                      <span>Donate to Us</span>
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="hidden md:flex items-center gap-3 relative">
@@ -160,17 +229,15 @@ export function Navigation() {
                     </div>
 
                     <div className="p-2 space-y-1">
-                      {getDashboardLink() && (
-                        <button
-                          onClick={() => {
-                            router.push(getDashboardLink()!)
-                            setIsProfileDropdownOpen(false)
-                          }}
-                          className="w-full flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors font-medium text-left"
-                        >
-                          <span>{dashboardLabel()}</span>
-                        </button>
-                      )}
+                      <button
+                        onClick={() => {
+                          router.push(getDashboardLink())
+                          setIsProfileDropdownOpen(false)
+                        }}
+                        className="w-full flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors font-medium text-left"
+                      >
+                        <span>{dashboardLabel()}</span>
+                      </button>
 
                       <button
                         onClick={() => {
@@ -227,12 +294,13 @@ export function Navigation() {
         </div>
 
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0"}`}
         >
           <div className="pb-4 space-y-1">
             <Link
               href="/community"
               className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+              onClick={() => setIsOpen(false)}
             >
               <Users className="w-4 h-4" />
               <span>Communities</span>
@@ -240,6 +308,7 @@ export function Navigation() {
             <Link
               href="/opportunities"
               className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+              onClick={() => setIsOpen(false)}
             >
               <Calendar className="w-4 h-4" />
               <span>Opportunities</span>
@@ -247,10 +316,39 @@ export function Navigation() {
             <Link
               href="/location"
               className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+              onClick={() => setIsOpen(false)}
             >
               <School2 className="w-4 h-4" />
               <span>Schools</span>
             </Link>
+
+            <div className="space-y-1 pt-2">
+              <div className="text-xs font-semibold text-muted-foreground px-2 py-1">About Us</div>
+              <Link
+                href="/about"
+                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                <Info className="w-4 h-4" />
+                <span>About Danai</span>
+              </Link>
+              <Link
+                href="/why-danai"
+                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                <Sparkles className="w-4 h-4" />
+                <span>Why Danai</span>
+              </Link>
+              <Link
+                href="/donate"
+                className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+                onClick={() => setIsOpen(false)}
+              >
+                <Heart className="w-4 h-4" />
+                <span>Donate to Us</span>
+              </Link>
+            </div>
 
             <div className="flex flex-col gap-2 pt-3">
               {!isAuth ? (
@@ -259,32 +357,36 @@ export function Navigation() {
                     variant="outline"
                     size="default"
                     className="w-full glass-hover bg-transparent"
-                    onClick={() => router.push("/auth")}
+                    onClick={() => {
+                      router.push("/auth")
+                      setIsOpen(false)
+                    }}
                   >
                     Sign In
                   </Button>
                   <Button
                     size="default"
                     className="w-full bg-primary hover:bg-primary/90"
-                    onClick={() => router.push("/auth")}
+                    onClick={() => {
+                      router.push("/auth")
+                      setIsOpen(false)
+                    }}
                   >
                     Get Started
                   </Button>
                 </>
               ) : (
                 <>
-                  {getDashboardLink() && (
-                    <Button
-                      onClick={() => {
-                        router.push(getDashboardLink()!)
-                        setIsOpen(false)
-                      }}
-                      variant="outline"
-                      className="w-full"
-                    >
-                      {dashboardLabel()}
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => {
+                      router.push(getDashboardLink())
+                      setIsOpen(false)
+                    }}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    {dashboardLabel()}
+                  </Button>
                   <Button
                     onClick={() => {
                       router.push("/profile")

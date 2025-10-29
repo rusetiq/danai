@@ -340,4 +340,46 @@ export class SharedDataStore {
       localStorage.setItem(this.KEYS.ACTIVITIES, JSON.stringify(activities))
     }
   }
+
+  static getUserCredits(userEmail: string): number {
+    const user = localStorage.getItem(`user_${userEmail}`)
+    if (user) {
+      const userData = JSON.parse(user)
+      return userData.credits || 0
+    }
+    return 0
+  }
+
+  static setUserCredits(userEmail: string, credits: number): void {
+    const user = localStorage.getItem(`user_${userEmail}`)
+    if (user) {
+      const userData = JSON.parse(user)
+      userData.credits = Math.max(0, credits)
+      localStorage.setItem(`user_${userEmail}`, JSON.stringify(userData))
+    }
+  }
+
+  static adjustUserCredits(userEmail: string, amount: number): number {
+    const currentCredits = this.getUserCredits(userEmail)
+    const newCredits = Math.max(0, currentCredits + amount)
+    this.setUserCredits(userEmail, newCredits)
+    return newCredits
+  }
+
+  static getAllUsers(): Array<{ email: string; name: string; credits: number; userType: string }> {
+    const users: Array<{ email: string; name: string; credits: number; userType: string }> = []
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (key?.startsWith("user_")) {
+        const userData = JSON.parse(localStorage.getItem(key) || "{}")
+        users.push({
+          email: userData.email || "",
+          name: userData.name || "Unknown",
+          credits: userData.credits || 0,
+          userType: userData.userType || "volunteer",
+        })
+      }
+    }
+    return users
+  }
 }

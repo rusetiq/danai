@@ -69,17 +69,7 @@ const rewards: Reward[] = [
     image: "https://images.unsplash.com/photo-1531346878377-a5be20888e57?w=800&h=600&fit=crop&q=80",
     category: "Sustainability",
     available: true,
-  },
-  {
-    id: 6,
-    title: "Plant-Based Soap Collection",
-    brand: "Natural Beauty Dubai",
-    description: "Handcrafted organic soaps with essential oils, plastic-free packaging",
-    credits: 35,
-    image: "https://images.unsplash.com/photo-1600857062241-98e5dba60f2f?w=800&h=600&fit=crop&q=80",
-    category: "Sustainability",
-    available: true,
-  },
+  }
 ]
 
 export default function RewardsPage() {
@@ -99,7 +89,7 @@ export default function RewardsPage() {
     setCurrentUser(user)
 
     const creditsData = localStorage.getItem(`credits:${user}`)
-    setUserCredits(creditsData ? Number.parseInt(creditsData) : 150)
+    setUserCredits(creditsData ? Number.parseInt(creditsData) : 20)
 
     const redeemedData = localStorage.getItem(`redeemed:${user}`)
     setRedeemedRewards(redeemedData ? JSON.parse(redeemedData) : [])
@@ -173,14 +163,15 @@ export default function RewardsPage() {
                   isRedeemed && "opacity-60",
                 )}
               >
-                <div className="relative h-40 sm:h-48 overflow-hidden">
+                <div className="relative h-[50vh] overflow-hidden p-4">
                   <img
                     src={reward.image || "/placeholder.svg"}
                     alt={reward.title}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover rounded-lg"
                   />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/20 to-transparent pointer-events-none m-4 rounded-lg" />
                   {isRedeemed && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center m-4 rounded-lg">
                       <div className="text-center">
                         <Check className="w-10 h-10 sm:w-12 sm:h-12 text-primary mx-auto mb-2" />
                         <p className="text-white font-semibold text-sm sm:text-base">Redeemed</p>
