@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
 
 interface CharityUser {
+  id: number
   name: string
   email: string
   password: string
-  userType?: "school" | "ngo" | "admin" | "student" | "volunteer"
-  school?: string
+  userType?: "school" | "ngo" | "admin"
 }
 
 export function Navigation() {
@@ -27,18 +27,17 @@ export function Navigation() {
     setUser(null)
     setIsProfileDropdownOpen(false)
     setIsOpen(false)
-    router.push("/")
   }
 
   useEffect(() => {
     const storedCurrentUser = localStorage.getItem("currentUser")
-    setIsAuth(!!storedCurrentUser)
-    if (storedCurrentUser) {
-      const userKey = `user_${storedCurrentUser}`
-      const userData = localStorage.getItem(userKey)
-      if (userData) {
-        setUser(JSON.parse(userData))
-      }
+    const storedUsersData = localStorage.getItem("charityUsers")
+    const existingUsers: CharityUser[] = storedUsersData ? JSON.parse(storedUsersData) : []
+    const currentUserEmail = storedCurrentUser
+    setIsAuth(!!currentUserEmail)
+    if (currentUserEmail) {
+      const currentUser = existingUsers.find((u) => u.email === currentUserEmail)
+      setUser(currentUser || null)
     } else {
       setUser(null)
     }
@@ -61,7 +60,7 @@ export function Navigation() {
   }, [isProfileDropdownOpen])
 
   const getDashboardLink = () => {
-    if (!user?.userType) return "/dashboard"
+    if (!user?.userType) return null
     switch (user.userType) {
       case "admin":
         return "/admin"
@@ -69,30 +68,22 @@ export function Navigation() {
         return "/school-dashboard"
       case "ngo":
         return "/ngo-dashboard"
-      case "student":
-        return "/student-dashboard"
-      case "volunteer":
-        return "/dashboard"
       default:
-        return "/dashboard"
+        return null
     }
   }
 
   const dashboardLabel = () => {
-    if (!user?.userType) return "Dashboard"
+    if (!user?.userType) return null
     switch (user.userType) {
       case "admin":
-        return "Admin Panel"
+        return "Admin Page"
       case "school":
         return "School Dashboard"
       case "ngo":
-        return "NGO Panel"
-      case "student":
-        return "Student Dashboard"
-      case "volunteer":
-        return "User Dashboard"
+        return "NGO Dashboard"
       default:
-        return "Dashboard"
+        return null
     }
   }
 
@@ -130,7 +121,7 @@ export function Navigation() {
             </Link>
             <Link
               href="/about"
-              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
             >
               <Info className="w-4 h-4" />
               <span>About</span>
@@ -176,15 +167,17 @@ export function Navigation() {
                     </div>
 
                     <div className="p-2 space-y-1">
-                      <button
-                        onClick={() => {
-                          router.push(getDashboardLink())
-                          setIsProfileDropdownOpen(false)
-                        }}
-                        className="w-full flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors font-medium text-left"
-                      >
-                        <span>{dashboardLabel()}</span>
-                      </button>
+                      {getDashboardLink() && (
+                        <button
+                          onClick={() => {
+                            router.push(getDashboardLink()!)
+                            setIsProfileDropdownOpen(false)
+                          }}
+                          className="w-full flex items-center space-x-2 px-3 py-2 text-sm hover:bg-accent/20 rounded-lg transition-colors font-medium text-left"
+                        >
+                          <span>{dashboardLabel()}</span>
+                        </button>
+                      )}
 
                       <button
                         onClick={() => {
@@ -241,13 +234,12 @@ export function Navigation() {
         </div>
 
         <div
-          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-[500px] opacity-100" : "max-h-0 opacity-0"}`}
+          className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}
         >
           <div className="pb-4 space-y-1">
             <Link
               href="/community"
               className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
-              onClick={() => setIsOpen(false)}
             >
               <Users className="w-4 h-4" />
               <span>Communities</span>
@@ -255,7 +247,6 @@ export function Navigation() {
             <Link
               href="/opportunities"
               className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
-              onClick={() => setIsOpen(false)}
             >
               <Calendar className="w-4 h-4" />
               <span>Opportunities</span>
@@ -263,7 +254,6 @@ export function Navigation() {
             <Link
               href="/location"
               className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
-              onClick={() => setIsOpen(false)}
             >
               <School2 className="w-4 h-4" />
               <span>Schools</span>
@@ -271,7 +261,6 @@ export function Navigation() {
             <Link
               href="/about"
               className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
-              onClick={() => setIsOpen(false)}
             >
               <Info className="w-4 h-4" />
               <span>About</span>
@@ -284,36 +273,32 @@ export function Navigation() {
                     variant="outline"
                     size="default"
                     className="w-full glass-hover bg-transparent"
-                    onClick={() => {
-                      router.push("/auth")
-                      setIsOpen(false)
-                    }}
+                    onClick={() => router.push("/auth")}
                   >
                     Sign In
                   </Button>
                   <Button
                     size="default"
                     className="w-full bg-primary hover:bg-primary/90"
-                    onClick={() => {
-                      router.push("/auth")
-                      setIsOpen(false)
-                    }}
+                    onClick={() => router.push("/auth")}
                   >
                     Get Started
                   </Button>
                 </>
               ) : (
                 <>
-                  <Button
-                    onClick={() => {
-                      router.push(getDashboardLink())
-                      setIsOpen(false)
-                    }}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    {dashboardLabel()}
-                  </Button>
+                  {getDashboardLink() && (
+                    <Button
+                      onClick={() => {
+                        router.push(getDashboardLink()!)
+                        setIsOpen(false)
+                      }}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {dashboardLabel()}
+                    </Button>
+                  )}
                   <Button
                     onClick={() => {
                       router.push("/profile")
