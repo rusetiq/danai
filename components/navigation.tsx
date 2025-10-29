@@ -101,15 +101,15 @@ export function Navigation() {
     if (!user?.userType) return "Dashboard"
     switch (user.userType) {
       case "admin":
-        return "Admin Page"
+        return "Admin Panel"
       case "school":
         return "School Dashboard"
       case "ngo":
-        return "NGO Dashboard"
+        return "NGO Panel"
       case "student":
         return "Student Dashboard"
       case "volunteer":
-        return "Dashboard"
+        return "User Dashboard"
       default:
         return "Dashboard"
     }
