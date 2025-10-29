@@ -121,7 +121,7 @@ export function Navigation() {
             </Link>
             <Link
               href="/about"
-              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground hover:bg-accent py-3 px-2 rounded-lg transition-all duration-200"
+              className="flex items-center space-x-2 text-muted-foreground hover:text-foreground transition-colors"
             >
               <Info className="w-4 h-4" />
               <span>About</span>
